@@ -124,6 +124,13 @@ def main():
         else:
             print("Invalid choice. Please try again.")
 
+# Resetting the table
+cursor = connection.cursor()
+reset_query = "DELETE FROM accounts"
+cursor.execute(reset_query)
+connection.commit()
+cursor.close()
+
 if __name__ == "__main__":
     main()
 
