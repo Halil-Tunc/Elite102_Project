@@ -90,7 +90,7 @@ def main():
             cursor = connection.cursor(dictionary=True)
             select_query = f"SELECT * FROM accounts WHERE account_number = '{account_number}' AND pin = '{pin}'"
             cursor.execute(select_query)
-            account = cursor.fetchone()
+            account = list(cursor)
             if account:
                 print("Login successful.")
                 while True:
