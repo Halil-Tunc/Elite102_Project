@@ -118,6 +118,11 @@ def main():
             cursor.close()
 
         elif choice == "3":
+            testQuery = "SELECT * FROM accounts"
+            cursor.execute(testQuery)
+            for item in cursor:
+            print(item)
+            cursor.close()
             print("Exiting...")
             break
 
