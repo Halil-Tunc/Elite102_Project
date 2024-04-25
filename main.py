@@ -121,7 +121,7 @@ def main():
             testQuery = "SELECT * FROM accounts"
             cursor.execute(testQuery)
             for item in cursor:
-            print(item)
+                print(item)
             cursor.close()
             print("Exiting...")
             break
