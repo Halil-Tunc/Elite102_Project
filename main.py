@@ -26,108 +26,46 @@
 
 import mysql.connector
 
-# Function to establish connection to MySQL database
-def connect_to_database():
-    try:
-        connection = mysql.connector.connect(user='root', database='bank', password='Tunc2009')
-        return connection
-    except mysql.connector.Error as err:
-        print("Error connecting to MySQL database:", err)
-        return None
+# Establishing connection to MySQL database
+connection = mysql.connector.connect(user='root', database='bank', password='Tunc2009')
+cursor = connection.cursor()
 
-# Function to create a new account in the database
-def create_account(account_number, pin):
-    try:
-        connection = connect_to_database()
-        if connection:
-            cursor = connection.cursor()
-            insert_query = "INSERT INTO accounts (account_number, pin, balance) VALUES (%s, %s, 0)"
-            cursor.execute(insert_query, (account_number, pin))
-            connection.commit()
-            print("Account created successfully.")
-            cursor.close()
-    except mysql.connector.Error as err:
-        print("Error creating account:", err)
-    finally:
-        if connection:
-            connection.close()
+# Displaying existing accounts (just for testing)
+testQuery = "SELECT * FROM accounts"
+cursor.execute(testQuery)
+for item in cursor:
+    print(item)
+cursor.close()
 
-# Function to retrieve account information from the database
-def get_account(account_number):
-    try:
-        connection = connect_to_database()
-        if connection:
-            cursor = connection.cursor(dictionary=True)
-            select_query = "SELECT * FROM accounts WHERE account_number = %s"
-            cursor.execute(select_query, (account_number,))
-            return cursor.fetchone()
-    except mysql.connector.Error as err:
-        print("Error retrieving account:", err)
-        return None
-    finally:
-        if connection:
-            connection.close()
-
-# Function to update account balance in the database
-def update_balance(account_number, new_balance):
-    try:
-        connection = connect_to_database()
-        if connection:
-            cursor = connection.cursor()
-            update_query = "UPDATE accounts SET balance = %s WHERE account_number = %s"
-            cursor.execute(update_query, (new_balance, account_number))
-            connection.commit()
-            cursor.close()
-    except mysql.connector.Error as err:
-        print("Error updating balance:", err)
-    finally:
-        if connection:
-            connection.close()
-
-# Function to update account PIN in the database
-def update_pin(account_number, new_pin):
-    try:
-        connection = connect_to_database()
-        if connection:
-            cursor = connection.cursor()
-            update_query = "UPDATE accounts SET pin = %s WHERE account_number = %s"
-            cursor.execute(update_query, (new_pin, account_number))
-            connection.commit()
-            cursor.close()
-    except mysql.connector.Error as err:
-        print("Error updating PIN:", err)
-    finally:
-        if connection:
-            connection.close()
-
+# Function to deposit money into the account
 def deposit(account_number, amount):
-    account = get_account(account_number)
-    if account:
-        new_balance = account['balance'] + amount
-        update_balance(account_number, new_balance)
-        print(f"Deposit successful. New balance: {new_balance}")
-    else:
-        print("Account not found.")
+    cursor = connection.cursor()
+    update_query = f"UPDATE accounts SET balance = balance + {amount} WHERE account_number = '{account_number}'"
+    cursor.execute(update_query)
+    connection.commit()
+    print("Deposit successful.")
+    cursor.close()
 
+# Function to withdraw money from the account
 def withdraw(account_number, amount):
-    account = get_account(account_number)
-    if account:
-        if amount <= account['balance']:
-            new_balance = account['balance'] - amount
-            update_balance(account_number, new_balance)
-            print(f"Withdrawal successful. New balance: {new_balance}")
-        else:
-            print("Insufficient funds.")
+    cursor = connection.cursor()
+    update_query = f"UPDATE accounts SET balance = balance - {amount} WHERE account_number = '{account_number}' AND balance >= {amount}"
+    cursor.execute(update_query)
+    connection.commit()
+    if cursor.rowcount > 0:
+        print("Withdrawal successful.")
     else:
-        print("Account not found.")
+        print("Insufficient funds.")
+    cursor.close()
 
+# Function to change the account's PIN
 def change_pin(account_number, new_pin):
-    account = get_account(account_number)
-    if account:
-        update_pin(account_number, new_pin)
-        print("PIN changed successfully.")
-    else:
-        print("Account not found.")
+    cursor = connection.cursor()
+    update_query = f"UPDATE accounts SET pin = '{new_pin}' WHERE account_number = '{account_number}'"
+    cursor.execute(update_query)
+    connection.commit()
+    print("PIN changed successfully.")
+    cursor.close()
 
 def main():
     print("Welcome to Our Bank!")
@@ -138,40 +76,46 @@ def main():
 
         if choice == "1":
             account_number = input("Enter account number: ")
-            pin = input("Set pin: ")
-            create_account(account_number, pin)
+            pin = input("Set PIN (4 characters, only numbers): ")
+            cursor = connection.cursor()
+            insert_query = f"INSERT INTO accounts (account_number, pin, balance) VALUES ('{account_number}', '{pin}', 0)"
+            cursor.execute(insert_query)
+            connection.commit()
+            print("Account created successfully.")
+            cursor.close()
 
         elif choice == "2":
             account_number = input("Enter account number: ")
-            account = get_account(account_number)
+            pin = input("Enter PIN: ")
+            cursor = connection.cursor(dictionary=True)
+            select_query = f"SELECT * FROM accounts WHERE account_number = '{account_number}' AND pin = '{pin}'"
+            cursor.execute(select_query)
+            account = cursor.fetchone()
             if account:
-                pin = input("Enter pin: ")
-                if pin == account['pin']:
-                    while True:
-                        print("\n1. Deposit\n2. Withdraw\n3. Change PIN\n4. Logout")
-                        user_choice = input("Enter your choice: ")
+                print("Login successful.")
+                while True:
+                    print("\n1. Deposit\n2. Withdraw\n3. Change PIN\n4. Logout")
+                    user_choice = input("Enter your choice: ")
 
-                        if user_choice == "1":
-                            amount = float(input("Enter amount to deposit: "))
-                            deposit(account_number, amount)
+                    if user_choice == "1":
+                        amount = int(input("Enter amount to deposit: "))
+                        deposit(account_number, amount)
 
-                        elif user_choice == "2":
-                            amount = float(input("Enter amount to withdraw: "))
-                            withdraw(account_number, amount)
+                    elif user_choice == "2":
+                        amount = int(input("Enter amount to withdraw: "))
+                        withdraw(account_number, amount)
 
-                        elif user_choice == "3":
-                            new_pin = input("Enter new pin: ")
-                            update_pin(account_number, new_pin)
+                    elif user_choice == "3":
+                        new_pin = input("Enter new PIN (4 characters, only numbers): ")
+                        change_pin(account_number, new_pin)
 
-                        elif user_choice == "4":
-                            print("Logged out.")
-                            break
-
-                else:
-                    print("Incorrect pin.")
+                    elif user_choice == "4":
+                        print("Logged out.")
+                        break
 
             else:
-                print("Account not found.")
+                print("Incorrect account number or PIN.")
+            cursor.close()
 
         elif choice == "3":
             print("Exiting...")
@@ -182,3 +126,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# Closing the connection to MySQL database
+connection.close()
