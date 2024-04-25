@@ -1,3 +1,28 @@
+#To manage bank accounts:
+
+#Create a bank account with a number and PIN.
+#Deposit money into the account.
+#Withdraw money from the account.
+#Change the account's PIN.
+
+#To use the system:
+
+#Start.
+#Choose: create an account, log in, or exit.
+#If creating an account:
+#Enter a number and a PIN.
+#The user is limited to only 4 numbers.
+#Account created!
+#If logging in:
+#Enter your account number and PIN.
+#If correct:
+#Deposit, withdraw, or change PIN.
+#Log out to finish.
+#If incorrect:
+#Try again or exit.
+#If exiting:
+#End.
+
 import mysql.connector
 
 # Establishing connection to MySQL database
@@ -17,14 +42,16 @@ def display_accounts():
 # Displaying existing accounts (just for testing)
 display_accounts()
 
+#Deposit money, constantly changing
 def deposit(account_number, amount):
     cursor = connection.cursor()
-    update_query = f"UPDATE accounts SET balance = balance + {amount} WHERE account_number = '{account_number}'"
+    update_query = f"UPDATE accounts SET balance = balance + {amount} WHERE account_number = '{account_number}'" # I need to use UPDATE because it is going to be constantly changing.
     cursor.execute(update_query)
     connection.commit()
     print("Deposit successful.")
     cursor.close()
 
+#Withdraw money, constantly changing
 def withdraw(account_number, amount):
     cursor = connection.cursor()
     update_query = f"UPDATE accounts SET balance = balance - {amount} WHERE account_number = '{account_number}' AND balance >= {amount}"
@@ -36,6 +63,7 @@ def withdraw(account_number, amount):
         print("Insufficient funds.")
     cursor.close()
 
+#Change pin, may be changed frequently
 def change_pin(account_number, new_pin):
     cursor = connection.cursor()
     update_query = f"UPDATE accounts SET pin = '{new_pin}' WHERE account_number = '{account_number}'"
@@ -90,7 +118,7 @@ def main():
             cursor = connection.cursor()
             select_query = f"SELECT * FROM accounts WHERE account_number = '{account_number}' AND pin = '{pin}'"
             cursor.execute(select_query)
-            account = cursor.fetchone()
+            account = cursor.fetchone() # I had to learn how to fetch a single row of data: https://dev.mysql.com/doc/connector-python/en/connector-python-api-mysqlcursor-fetchone.html
             if account:
                 print("Login successful.")
                 while True:
