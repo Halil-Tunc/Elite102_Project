@@ -23,10 +23,23 @@
 #If exiting:
 #End.
 
+import os
+from dotenv import load_dotenv
+import mysql.connector
 import mysql.connector
 
+load_dotenv()
+
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+if not DB_PASSWORD:
+    raise ValueError("Missing DB_PASSWORD in .env file.")
+
 # Establishing connection to MySQL database
-connection = mysql.connector.connect(user='root', database='bank', password='Tunc2009')
+connection = mysql.connector.connect(
+    user="root",
+    database="bank",
+    password=DB_PASSWORD
+)
 cursor = connection.cursor()
 
 # Function to display all accounts
